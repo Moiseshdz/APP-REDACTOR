@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redactor Dinámico de Turnos 911</title>
+  <style>
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #06111f;
+  --bg-2: #081a31;
+  --panel: rgba(12, 31, 55, .88);
+  --panel-2: rgba(17, 43, 76, .92);
+  --line: rgba(255,255,255,.12);
+  --text: #f6f9ff;
+  --muted: #aab8ca;
+  --primary: #19a7ff;
+  --primary-dark: #0775c4;
+  --green: #23d18b;
+  --green-dark: #0c9360;
+  --danger: #ff5e6c;
+  --warning: #ffd166;
+  --shadow: 0 25px 80px rgba(0,0,0,.38);
+  --radius: 24px;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(25,167,255,.23), transparent 30%),
+    radial-gradient(circle at 70% 20%, rgba(35,209,139,.11), transparent 25%),
+    linear-gradient(135deg, var(--bg), var(--bg-2) 55%, #05101d);
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 310px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  min-height: 100vh;
+  padding: 24px;
+  background: rgba(4, 14, 26, .72);
+  border-right: 1px solid var(--line);
+  backdrop-filter: blur(16px);
+}
+
+.brand {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.logo {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--primary), var(--green));
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 900;
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(25, 167, 255, .22);
+}
+
+.brand h1 {
+  font-size: 1.1rem;
+  margin: 0 0 4px;
+}
+
+.brand p,
+.hero p,
+.panel-head p {
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.step-box,
+.tips {
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.05);
+  border-radius: 22px;
+  margin-bottom: 18px;
+}
+
+.step-label {
+  color: var(--muted);
+  margin: 0 0 6px;
+  font-size: .84rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.flow-name {
+  font-weight: 900;
+  font-size: 1.25rem;
+}
+
+.mini-progress {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.mini-progress span {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.12);
+}
+
+.mini-progress span.active {
+  background: linear-gradient(90deg, var(--primary), var(--green));
+}
+
+.quick-menu {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.quick {
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.05);
+  color: var(--text);
+  text-align: left;
+  padding: 13px 14px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-weight: 800;
+  transition: .18s ease;
+}
+
+.quick:hover,
+.quick.active {
+  border-color: rgba(25,167,255,.55);
+  background: rgba(25,167,255,.16);
+  transform: translateX(2px);
+}
+
+.tips strong {
+  color: var(--warning);
+}
+
+.tips p {
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 8px 0 0;
+}
+
+.main {
+  padding: 26px;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 18px;
+  padding: 26px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: linear-gradient(135deg, rgba(12,31,55,.95), rgba(17,43,76,.75));
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+
+.eyebrow {
+  color: var(--primary) !important;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  font-size: .77rem;
+  margin-bottom: 6px !important;
+}
+
+.hero h2 {
+  margin: 0 0 8px;
+  font-size: clamp(1.9rem, 4vw, 3.5rem);
+  line-height: .98;
+}
+
+.clock-card {
+  min-width: 210px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(255,255,255,.06);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.clock-card span {
+  color: var(--muted);
+  font-size: .85rem;
+}
+
+.clock-card strong {
+  margin-top: 5px;
+  font-size: 1rem;
+}
+
+.mode-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.mode-card {
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.05);
+  color: var(--text);
+  border-radius: 22px;
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+  min-height: 142px;
+  transition: .18s ease;
+}
+
+.mode-card:hover,
+.mode-card.active {
+  transform: translateY(-2px);
+  border-color: rgba(25,167,255,.65);
+  background: linear-gradient(135deg, rgba(25,167,255,.20), rgba(35,209,139,.08));
+  box-shadow: 0 18px 50px rgba(0,0,0,.22);
+}
+
+.mode-card .icon {
+  display: block;
+  font-size: 1.55rem;
+  margin-bottom: 9px;
+}
+
+.mode-card strong {
+  display: block;
+  margin-bottom: 7px;
+}
+
+.mode-card small {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(380px, .95fr);
+  gap: 20px;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 22px;
+  backdrop-filter: blur(16px);
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.panel-head h3 {
+  margin: 0 0 5px;
+  font-size: 1.25rem;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background: rgba(25,167,255,.18);
+  border: 1px solid rgba(25,167,255,.36);
+  padding: 8px 11px;
+  border-radius: 999px;
+  font-size: .82rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.pill.muted {
+  color: var(--warning);
+  background: rgba(255,209,102,.12);
+  border-color: rgba(255,209,102,.24);
+}
+
+.group-title {
+  color: var(--primary);
+  font-size: .83rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin: 20px 0 10px;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+label {
+  display: block;
+  color: var(--muted);
+  font-size: .88rem;
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  margin-top: 7px;
+  border: 1px solid var(--line);
+  background: rgba(4, 14, 26, .82);
+  color: var(--text);
+  border-radius: 15px;
+  padding: 12px 13px;
+  outline: none;
+  font-size: .95rem;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(25,167,255,.72);
+  box-shadow: 0 0 0 4px rgba(25,167,255,.12);
+}
+
+textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.conditional {
+  animation: show .18s ease both;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@keyframes show {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.alert-box {
+  border: 1px solid rgba(255,209,102,.25);
+  background: rgba(255,209,102,.10);
+  color: #ffe3a0;
+  padding: 14px;
+  border-radius: 16px;
+  line-height: 1.45;
+}
+
+.smart-panel {
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.04);
+  border-radius: 18px;
+  padding: 14px;
+}
+
+.smart-panel strong {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.07);
+  border-radius: 999px;
+  padding: 9px 11px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: .84rem;
+}
+
+.chip:hover {
+  background: rgba(25,167,255,.18);
+}
+
+.actions,
+.preview-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.btn {
+  border: 0;
+  border-radius: 15px;
+  padding: 12px 15px;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+  transition: .16s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.07);
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+}
+
+.btn.success {
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+}
+
+.btn.ghost {
+  background: rgba(255,255,255,.08);
+  border: 1px solid var(--line);
+}
+
+.btn.danger {
+  background: rgba(255,94,108,.16);
+  color: #ffd6da;
+  border: 1px solid rgba(255,94,108,.34);
+}
+
+.salida {
+  min-height: 465px;
+  font-size: .98rem;
+}
+
+.notice {
+  min-height: 26px;
+  color: var(--green);
+  font-weight: 900;
+  margin-top: 10px;
+}
+
+.live-summary {
+  margin-top: 16px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255,255,255,.04);
+}
+
+.live-summary h4 {
+  margin: 0 0 10px;
+}
+
+.summary-grid {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.history-panel {
+  margin-top: 20px;
+}
+
+.history-empty {
+  padding: 15px;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  border-radius: 16px;
+}
+
+.history-item {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(4,14,26,.56);
+  margin-bottom: 12px;
+}
+
+.history-meta {
+  color: var(--primary);
+  font-size: .85rem;
+  font-weight: 900;
+  margin-bottom: 9px;
+}
+
+.history-text {
+  white-space: pre-wrap;
+  line-height: 1.5;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+@media (max-width: 1180px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    min-height: unset;
+  }
+
+  .quick-menu {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .mode-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .main,
+  .sidebar {
+    padding: 16px;
+  }
+
+  .hero,
+  .panel-head {
+    flex-direction: column;
+  }
+
+  .clock-card {
+    width: 100%;
+  }
+
+  .mode-grid,
+  .quick-menu,
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mode-card {
+    min-height: auto;
+  }
+
+  .actions .btn,
+  .preview-tools .btn {
+    flex: 1 1 auto;
+  }
+}
+
+</style>
+  <meta name="theme-color" content="#06182d" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">911</div>
+        <div>
+          <h1>Redactor de Turnos</h1>
+          <p>Central de atención · Reforma</p>
+        </div>
+      </div>
+
+      <div class="step-box">
+        <p class="step-label">Flujo actual</p>
+        <div id="flujoNombre" class="flow-name">Turnar reporte</div>
+        <div class="mini-progress">
+          <span class="active"></span>
+          <span class="active"></span>
+          <span></span>
+        </div>
+      </div>
+
+      <nav class="quick-menu">
+        <button class="quick active" data-mode="turnar">Turnar reporte</button>
+        <button class="quick" data-mode="recibida">Info recibida</button>
+        <button class="quick" data-mode="seguimiento">Seguimiento</button>
+        <button class="quick" data-mode="arribo">Arribo al lugar</button>
+        <button class="quick" data-mode="cierre">Cierre / resultado</button>
+        <button class="quick" data-mode="banco">Alarma Banco Bienestar</button>
+      </nav>
+
+      <div class="tips">
+        <strong>Tip:</strong>
+        <p>Elige primero qué pasó: si tú vas a turnar, si la corporación te informó algo, si llegó una unidad o si ya cerró el servicio.</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Redacción profesional automática</p>
+          <h2>¿Qué quieres redactar?</h2>
+          <p>Selecciona una acción y la app ajustará campos, frases y formato del reporte.</p>
+        </div>
+        <div class="clock-card">
+          <span>Fecha y hora</span>
+          <strong id="fechaHora">--</strong>
+        </div>
+      </header>
+
+      <section class="mode-grid" aria-label="Tipos de redacción">
+        <button class="mode-card active" data-mode="turnar">
+          <span class="icon">📡</span>
+          <strong>Turnar reporte</strong>
+          <small>Cuando canalizas el incidente a una corporación.</small>
+        </button>
+
+        <button class="mode-card" data-mode="recibida">
+          <span class="icon">📥</span>
+          <strong>Info recibida</strong>
+          <small>Cuando la corporación te responde o te informa algo.</small>
+        </button>
+
+        <button class="mode-card" data-mode="seguimiento">
+          <span class="icon">🔄</span>
+          <strong>Seguimiento</strong>
+          <small>Cuando pides actualización o queda pendiente.</small>
+        </button>
+
+        <button class="mode-card" data-mode="arribo">
+          <span class="icon">📍</span>
+          <strong>Arribo al lugar</strong>
+          <small>Cuando la unidad confirma llegada y verificación.</small>
+        </button>
+
+        <button class="mode-card" data-mode="cierre">
+          <span class="icon">✅</span>
+          <strong>Cierre / resultado</strong>
+          <small>Cuando registras el resultado final del servicio.</small>
+        </button>
+
+        <button class="mode-card" data-mode="banco">
+          <span class="icon">🏦</span>
+          <strong>Banco Bienestar</strong>
+          <small>Para alarmas que se turnan a Seguridad Pública.</small>
+        </button>
+      </section>
+
+      <section class="workspace">
+        <form id="formulario" class="panel form-panel">
+          <div class="panel-head">
+            <div>
+              <h3 id="tituloFormulario">Turnar reporte</h3>
+              <p id="descripcionFormulario">Completa los datos para generar el turno.</p>
+            </div>
+            <span id="etiquetaModo" class="pill">Turno</span>
+          </div>
+
+          <div class="group-title">Datos principales</div>
+
+          <div class="field-grid">
+            <label>
+              Corporación
+              <select id="corporacion">
+                <option value="seguridad">Seguridad Pública Municipal</option>
+                <option value="pc">Protección Civil Municipal</option>
+                <option value="transitoMunicipal">Tránsito Vial Municipal</option>
+                <option value="transitoEstado">Tránsito Vial del Estado</option>
+                <option value="todas">Corporaciones correspondientes</option>
+              </select>
+            </label>
+
+            <label>
+              Medio
+              <select id="medio">
+                <option value="vía radio">Vía radio</option>
+                <option value="vía llamada telefónica">Vía llamada telefónica</option>
+                <option value="vía radio/llamada">Vía radio/llamada</option>
+                <option value="vía WhatsApp">Vía WhatsApp</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label>
+              Tipo de incidente
+              <input id="incidente" list="listaIncidentes" placeholder="Ej. accidente, riña, alarma, lesionado..." />
+              <datalist id="listaIncidentes">
+                <option value="accidente de tránsito"></option>
+                <option value="persona lesionada"></option>
+                <option value="riña"></option>
+                <option value="persona agresiva"></option>
+                <option value="alarma activada"></option>
+                <option value="incendio"></option>
+                <option value="fuga de gas"></option>
+                <option value="obstrucción de vialidad"></option>
+                <option value="apoyo ciudadano"></option>
+                <option value="vehículo sospechoso"></option>
+                <option value="persona sospechosa"></option>
+              </datalist>
+            </label>
+
+            <label>
+              Ubicación
+              <input id="ubicacion" placeholder="Calle, colonia, referencia..." />
+            </label>
+          </div>
+
+          <div id="bloqueContacto" class="conditional">
+            <div class="group-title">Contacto / respuesta</div>
+            <div class="field-grid">
+              <label>
+                Estado de comunicación
+                <select id="estatus">
+                  <option value="recibido">Reciben el reporte</option>
+                  <option value="noContesta">No contestan llamada</option>
+                  <option value="whatsapp">Se deja mensaje por WhatsApp</option>
+                  <option value="pendiente">Pendiente de respuesta</option>
+                </select>
+              </label>
+
+              <label>
+                Número contactado
+                <input id="telefono" placeholder="Opcional" />
+              </label>
+            </div>
+          </div>
+
+          <div class="group-title">Unidad y responsable</div>
+
+          <div class="field-grid">
+            <label>
+              Cargo
+              <select id="cargo">
+                <option value="Director">Director</option>
+                <option value="Comandante">Comandante</option>
+                <option value="Coordinador">Coordinador</option>
+                <option value="Cabo">Cabo</option>
+                <option value="Encargado">Encargado</option>
+                <option value="Elemento">Elemento</option>
+                <option value="Radio operador">Radio operador</option>
+              </select>
+            </label>
+
+            <label>
+              Nombre
+              <input id="nombre" placeholder="Opcional" />
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label>
+              Unidad
+              <input id="unidad" placeholder="Ej. unidad 01, patrulla, ambulancia..." />
+            </label>
+
+            <label id="labelAccionUnidad">
+              Acción de la unidad
+              <select id="accionUnidad">
+                <option value="se dirige al lugar indicado">Se dirige al lugar indicado</option>
+                <option value="arriba al lugar señalado">Arriba al lugar señalado</option>
+                <option value="realiza recorridos de verificación">Realiza recorridos de verificación</option>
+                <option value="permanece en espera de indicaciones">Permanece en espera</option>
+                <option value="atiende el servicio correspondiente">Atiende el servicio</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="bloqueRecibida" class="conditional hidden">
+            <div class="group-title">Información recibida de la corporación</div>
+            <label>
+              ¿Qué informó la corporación?
+              <textarea id="infoRecibida" rows="4" placeholder="Ej. unidad informa que en el lugar no se localiza novedad, se entrevista con reportante, solicita apoyo adicional..."></textarea>
+            </label>
+          </div>
+
+          <div id="bloqueCierre" class="conditional hidden">
+            <div class="group-title">Resultado / cierre</div>
+            <div class="field-grid">
+              <label>
+                Resultado del servicio
+                <select id="resultadoServicio">
+                  <option value="se confirma el reporte y se brinda atención correspondiente">Se confirma y se atiende</option>
+                  <option value="se trata de falsa alarma">Falsa alarma</option>
+                  <option value="no se localiza novedad en el lugar">Sin novedad</option>
+                  <option value="se canaliza a la autoridad correspondiente">Canalizado</option>
+                  <option value="se realiza orientación ciudadana">Orientación ciudadana</option>
+                  <option value="se restablece la circulación">Circulación restablecida</option>
+                  <option value="se brinda atención prehospitalaria">Atención prehospitalaria</option>
+                  <option value="se realiza traslado">Traslado realizado</option>
+                </select>
+              </label>
+
+              <label>
+                Hora de cierre
+                <input id="horaCierre" type="time" />
+              </label>
+            </div>
+          </div>
+
+          <div id="bloqueBanco" class="conditional hidden">
+            <div class="group-title">Banco Bienestar</div>
+            <div class="alert-box">
+              Este modo redacta alarmas de sucursal Banco Bienestar. Siempre se canaliza a Seguridad Pública Municipal. Si los elementos no contestan, genera mensaje por WhatsApp.
+            </div>
+          </div>
+
+          <div class="group-title">Detalles adicionales</div>
+
+          <label>
+            Observaciones / datos del reportante
+            <textarea id="observaciones" rows="4" placeholder="Agrega datos importantes: referencias, personas involucradas, riesgos, vehículos, lesionados, solicitud de apoyo, etc."></textarea>
+          </label>
+
+          <div class="smart-panel">
+            <strong>Frases rápidas</strong>
+            <div class="chips">
+              <button type="button" class="chip" data-text="Reportante solicita apoyo inmediato.">Apoyo inmediato</button>
+              <button type="button" class="chip" data-text="Se desconoce si hay personas lesionadas.">Lesionados sin confirmar</button>
+              <button type="button" class="chip" data-text="Se reporta obstrucción parcial de la vialidad.">Obstrucción vial</button>
+              <button type="button" class="chip" data-text="Se solicita pronta atención para la correcta verificación.">Pronta atención</button>
+              <button type="button" class="chip" data-text="Se queda pendiente de ampliación de información.">Pendiente info</button>
+              <button type="button" class="chip" data-text="Se solicita informar arribo y resultado del servicio.">Solicitar arribo</button>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="button" id="generar" class="btn primary">Generar redacción</button>
+            <button type="button" id="limpiar" class="btn ghost">Limpiar</button>
+          </div>
+        </form>
+
+        <section class="panel output-panel">
+          <div class="panel-head">
+            <div>
+              <h3>Texto generado</h3>
+              <p>Lo puedes editar antes de copiarlo o guardarlo.</p>
+            </div>
+            <span id="contador" class="pill muted">0 caracteres</span>
+          </div>
+
+          <textarea id="salida" class="salida" rows="18" placeholder="Aquí aparecerá la redacción final..."></textarea>
+
+          <div class="preview-tools">
+            <button id="copiar" class="btn primary">Copiar</button>
+            <button id="guardar" class="btn success">Guardar historial</button>
+            <button id="descargar" class="btn ghost">Descargar TXT</button>
+          </div>
+
+          <div id="aviso" class="notice"></div>
+
+          <div class="live-summary">
+            <h4>Resumen rápido</h4>
+            <div id="resumenRapido" class="summary-grid">
+              <span>Modo: Turnar reporte</span>
+              <span>Corporación: Seguridad Pública</span>
+              <span>Incidente: sin capturar</span>
+              <span>Ubicación: sin capturar</span>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="panel history-panel">
+        <div class="panel-head">
+          <div>
+            <h3>Historial de redacciones</h3>
+            <p>Guardado localmente en este navegador.</p>
+          </div>
+          <button id="borrarHistorial" class="btn danger">Borrar historial</button>
+        </div>
+        <div id="historial" class="history-empty">Aún no hay redacciones guardadas.</div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+const $ = (id) => document.getElementById(id);
+const $$ = (selector) => document.querySelectorAll(selector);
+
+const state = {
+  mode: "turnar"
+};
+
+const nombresModo = {
+  turnar: "Turnar reporte",
+  recibida: "Información recibida",
+  seguimiento: "Seguimiento",
+  arribo: "Arribo al lugar",
+  cierre: "Cierre / resultado",
+  banco: "Alarma Banco Bienestar"
+};
+
+const descripcionesModo = {
+  turnar: "Cuando canalizas un reporte a una corporación para su verificación.",
+  recibida: "Cuando una corporación te informa una novedad, avance o respuesta.",
+  seguimiento: "Cuando solicitas actualización o dejas asentado que queda pendiente.",
+  arribo: "Cuando la unidad informa que llegó al lugar y verifica el incidente.",
+  cierre: "Cuando registras el resultado final y acciones realizadas.",
+  banco: "Para alarma de Banco Bienestar turnada a Seguridad Pública Municipal."
+};
+
+const etiquetasModo = {
+  turnar: "Turno",
+  recibida: "Recibido",
+  seguimiento: "Seguimiento",
+  arribo: "Arribo",
+  cierre: "Cierre",
+  banco: "Banco"
+};
+
+const corporaciones = {
+  seguridad: "Seguridad Pública Municipal",
+  pc: "Protección Civil Municipal",
+  transitoMunicipal: "Tránsito Vial Municipal",
+  transitoEstado: "Tránsito Vial del Estado",
+  todas: "Corporaciones correspondientes"
+};
+
+const campos = {
+  flujoNombre: $("flujoNombre"),
+  tituloFormulario: $("tituloFormulario"),
+  descripcionFormulario: $("descripcionFormulario"),
+  etiquetaModo: $("etiquetaModo"),
+  corporacion: $("corporacion"),
+  medio: $("medio"),
+  incidente: $("incidente"),
+  ubicacion: $("ubicacion"),
+  estatus: $("estatus"),
+  telefono: $("telefono"),
+  cargo: $("cargo"),
+  nombre: $("nombre"),
+  unidad: $("unidad"),
+  accionUnidad: $("accionUnidad"),
+  infoRecibida: $("infoRecibida"),
+  resultadoServicio: $("resultadoServicio"),
+  horaCierre: $("horaCierre"),
+  observaciones: $("observaciones"),
+  salida: $("salida"),
+  contador: $("contador"),
+  aviso: $("aviso"),
+  historial: $("historial"),
+  resumenRapido: $("resumenRapido"),
+  fechaHora: $("fechaHora"),
+  bloqueContacto: $("bloqueContacto"),
+  bloqueRecibida: $("bloqueRecibida"),
+  bloqueCierre: $("bloqueCierre"),
+  bloqueBanco: $("bloqueBanco"),
+  labelAccionUnidad: $("labelAccionUnidad")
+};
+
+function text(input, fallback = "") {
+  const value = input.value.trim();
+  return value || fallback;
+}
+
+function responsable() {
+  const cargo = text(campos.cargo, "personal");
+  const nombre = text(campos.nombre, "");
+  return nombre ? `${cargo} ${nombre} en turno` : `${cargo} en turno`;
+}
+
+function unidadTexto() {
+  return text(campos.unidad, "una unidad operativa");
+}
+
+function incidenteTexto() {
+  return text(campos.incidente, "[TIPO DE INCIDENTE]");
+}
+
+function ubicacionTexto() {
+  return text(campos.ubicacion, "[UBICACIÓN DEL INCIDENTE]");
+}
+
+function observacionesTexto() {
+  const obs = text(campos.observaciones, "");
+  return obs ? `\n\nDatos adicionales: ${obs}.` : "";
+}
+
+function infoRecibidaTexto() {
+  const info = text(campos.infoRecibida, "");
+  return info ? info : "se proporciona información relacionada con el seguimiento del servicio";
+}
+
+function fraseContacto() {
+  const estatus = campos.estatus.value;
+  const telefono = text(campos.telefono, "");
+
+  if (estatus === "recibido") {
+    return "La comunicación es atendida, quedando enterada la corporación para brindar la atención correspondiente.";
+  }
+
+  if (estatus === "noContesta") {
+    return `Se intenta establecer comunicación telefónica${telefono ? ` al número ${telefono}` : " a los números disponibles"}; sin embargo, no se obtiene respuesta al momento de la llamada.`;
+  }
+
+  if (estatus === "whatsapp") {
+    return `Al no obtener respuesta mediante llamada telefónica, se procede a dejar mensaje vía WhatsApp${telefono ? ` al número ${telefono}` : " al número correspondiente"}, proporcionando los datos preliminares del reporte y solicitando pronta atención.`;
+  }
+
+  return "Se queda pendiente de respuesta por parte del personal correspondiente para dar seguimiento al reporte.";
+}
+
+function enfoqueCorporacion(corp) {
+  if (corp === "seguridad") {
+    return "con la finalidad de realizar la verificación correspondiente, mantener el orden público, brindar apoyo preventivo, resguardar el área en caso necesario y coadyuvar con las demás corporaciones.";
+  }
+
+  if (corp === "pc") {
+    return "con la finalidad de valorar posibles riesgos, brindar auxilio a la población, atender personas lesionadas en caso de ser necesario y proceder conforme al protocolo de emergencias.";
+  }
+
+  if (corp === "transitoMunicipal") {
+    return "con la finalidad de verificar la situación, regular la circulación, prevenir otro incidente, brindar apoyo vial y proceder conforme a sus atribuciones dentro de la jurisdicción municipal.";
+  }
+
+  if (corp === "transitoEstado") {
+    return "con la finalidad de valorar las condiciones de la vía, apoyar en la regulación del tránsito vehicular y proceder conforme a sus facultades en hechos de competencia estatal.";
+  }
+
+  return "con la finalidad de verificar el hecho reportado, valorar la situación en el sitio y proceder conforme a las funciones operativas de cada institución.";
+}
+
+function generarTurnar() {
+  const corp = campos.corporacion.value;
+  const corpNombre = corporaciones[corp];
+
+  if (corp === "todas") {
+    return `Derivado del reporte recibido por ${incidenteTexto()}, registrado en ${ubicacionTexto()}, se procede a turnar la información ${campos.medio.value} a las corporaciones correspondientes, siendo Seguridad Pública Municipal, Protección Civil Municipal, Tránsito Vial Municipal y/o Tránsito Vial del Estado, según la naturaleza y jurisdicción del incidente.
+
+Se proporcionan los datos preliminares del reporte, referencias del lugar, posibles personas involucradas, riesgos presentes y demás información relevante para su conocimiento, verificación y atención.
+
+${fraseContacto()}
+
+Las unidades correspondientes se dirigen al lugar señalado con la finalidad de corroborar los hechos reportados, valorar la situación en el sitio y proceder conforme a sus funciones operativas.${observacionesTexto()}
+
+Se queda en espera de información por parte de las corporaciones para confirmar arribo, situación real del incidente y acciones realizadas.`;
+  }
+
+  return `Derivado del reporte recibido por ${incidenteTexto()}, registrado en ${ubicacionTexto()}, se procede a turnar la información ${campos.medio.value} a la base de ${corpNombre}, proporcionando los datos preliminares del incidente para su conocimiento, verificación y atención correspondiente.
+
+${fraseContacto()}
+
+En seguimiento al reporte, el ${responsable()} informa que ${unidadTexto()} ${campos.accionUnidad.value}, ${enfoqueCorporacion(corp)}${observacionesTexto()}
+
+Se queda en espera de la información que proporcione la unidad al arribar al lugar, a fin de confirmar la situación real del incidente y registrar las acciones realizadas.`;
+}
+
+function generarRecibida() {
+  const corp = campos.corporacion.value;
+  const corpNombre = corporaciones[corp];
+
+  return `Se recibe información por parte de ${corpNombre}, relacionada con el reporte de ${incidenteTexto()} en ${ubicacionTexto()}.
+
+El ${responsable()} informa que ${infoRecibidaTexto()}. Asimismo, se hace del conocimiento que ${unidadTexto()} ${campos.accionUnidad.value}, por lo que se da seguimiento al servicio conforme a la información proporcionada por la corporación.${observacionesTexto()}
+
+Se deja asentado en el reporte para control interno, seguimiento operativo y continuidad de la atención hasta contar con el resultado final del servicio.`;
+}
+
+function generarSeguimiento() {
+  const corp = campos.corporacion.value;
+  const corpNombre = corporaciones[corp];
+
+  return `En seguimiento al reporte de ${incidenteTexto()}, registrado en ${ubicacionTexto()}, se establece comunicación ${campos.medio.value} con ${corpNombre}, con la finalidad de solicitar actualización sobre la atención del servicio.
+
+${fraseContacto()}
+
+Se solicita informar el estatus de la unidad, arribo al lugar, situación encontrada y acciones realizadas, a fin de mantener actualizado el reporte y dar continuidad a la atención correspondiente.${observacionesTexto()}
+
+Se queda en espera de ampliación de información por parte de la corporación para el debido registro y seguimiento del incidente.`;
+}
+
+function generarArribo() {
+  const corp = campos.corporacion.value;
+  const corpNombre = corporaciones[corp];
+
+  return `${corpNombre} informa que ${unidadTexto()} arriba al lugar señalado por el reporte de ${incidenteTexto()}, ubicado en ${ubicacionTexto()}, con la finalidad de realizar la verificación correspondiente.
+
+El ${responsable()} indica que se procede a corroborar los hechos reportados, valorar la situación en el sitio y determinar las acciones necesarias conforme a las funciones operativas de la corporación.${observacionesTexto()}
+
+Se queda en espera del resultado de la verificación, así como de la información final que proporcione la unidad para el cierre o continuidad del servicio.`;
+}
+
+function generarCierre() {
+  const corp = campos.corporacion.value;
+  const corpNombre = corporaciones[corp];
+  const hora = text(campos.horaCierre, "");
+  const horaTexto = hora ? ` a las ${hora} horas` : "";
+
+  return `${corpNombre} informa el cierre del reporte de ${incidenteTexto()}, registrado en ${ubicacionTexto()}${horaTexto}.
+
+De acuerdo con la información proporcionada por el ${responsable()}, ${campos.resultadoServicio.value}. Asimismo, se indica que ${unidadTexto()} concluye la atención correspondiente, quedando asentadas las acciones realizadas conforme al protocolo operativo de la corporación.${observacionesTexto()}
+
+Se registra la información para control interno y se da por concluido el seguimiento del reporte, salvo nueva indicación o ampliación de datos relacionados con el incidente.`;
+}
+
+function generarBanco() {
+  const ubicacion = ubicacionTexto() === "[UBICACIÓN DEL INCIDENTE]" ? "la sucursal Banco Bienestar" : ubicacionTexto();
+
+  return `Derivado del reporte recibido por activación de alarma en sucursal Banco Bienestar, ubicada en ${ubicacion}, se procede a turnar de manera inmediata la información a Seguridad Pública Municipal, con la finalidad de que dicha corporación tenga conocimiento del incidente y realice la verificación correspondiente en el lugar señalado.
+
+Asimismo, se intenta establecer comunicación vía llamada telefónica con los números disponibles de los elementos de Seguridad Pública Municipal. ${fraseContacto()}
+
+En seguimiento al reporte, el ${responsable()} informa que ${unidadTexto()} ${campos.accionUnidad.value}, con la finalidad de corroborar los hechos, verificar la activación de la alarma, resguardar el área en caso necesario y proceder conforme al protocolo de atención correspondiente.${observacionesTexto()}
+
+Se queda en espera de respuesta y confirmación por parte del personal de Seguridad Pública Municipal para dar seguimiento al reporte hasta su cierre.`;
+}
+
+function generarTexto() {
+  let texto = "";
+
+  if (state.mode === "turnar") texto = generarTurnar();
+  if (state.mode === "recibida") texto = generarRecibida();
+  if (state.mode === "seguimiento") texto = generarSeguimiento();
+  if (state.mode === "arribo") texto = generarArribo();
+  if (state.mode === "cierre") texto = generarCierre();
+  if (state.mode === "banco") texto = generarBanco();
+
+  campos.salida.value = texto;
+  actualizarContador();
+  mostrarAviso("Redacción generada correctamente.");
+  actualizarResumen();
+}
+
+function setMode(mode) {
+  state.mode = mode;
+
+  campos.flujoNombre.textContent = nombresModo[mode];
+  campos.tituloFormulario.textContent = nombresModo[mode];
+  campos.descripcionFormulario.textContent = descripcionesModo[mode];
+  campos.etiquetaModo.textContent = etiquetasModo[mode];
+
+  $$(".mode-card").forEach(btn => btn.classList.toggle("active", btn.dataset.mode === mode));
+  $$(".quick").forEach(btn => btn.classList.toggle("active", btn.dataset.mode === mode));
+
+  campos.bloqueRecibida.classList.toggle("hidden", mode !== "recibida");
+  campos.bloqueCierre.classList.toggle("hidden", mode !== "cierre");
+  campos.bloqueBanco.classList.toggle("hidden", mode !== "banco");
+
+  if (mode === "banco") {
+    campos.corporacion.value = "seguridad";
+    campos.incidente.value = "activación de alarma en sucursal Banco Bienestar";
+    campos.medio.value = "vía llamada telefónica";
+  }
+
+  if (mode === "arribo") {
+    campos.accionUnidad.value = "arriba al lugar señalado";
+  }
+
+  if (mode === "seguimiento") {
+    campos.accionUnidad.value = "permanece en espera de indicaciones";
+  }
+
+  if (mode === "cierre") {
+    campos.accionUnidad.value = "atiende el servicio correspondiente";
+  }
+
+  actualizarResumen();
+}
+
+function actualizarResumen() {
+  const corp = corporaciones[campos.corporacion.value] || "Sin corporación";
+  const incidente = text(campos.incidente, "sin capturar");
+  const ubicacion = text(campos.ubicacion, "sin capturar");
+
+  campos.resumenRapido.innerHTML = `
+    <span>Modo: ${nombresModo[state.mode]}</span>
+    <span>Corporación: ${corp}</span>
+    <span>Incidente: ${incidente}</span>
+    <span>Ubicación: ${ubicacion}</span>
+  `;
+}
+
+function actualizarContador() {
+  campos.contador.textContent = `${campos.salida.value.length} caracteres`;
+}
+
+function limpiar() {
+  [
+    "incidente",
+    "ubicacion",
+    "telefono",
+    "nombre",
+    "unidad",
+    "infoRecibida",
+    "horaCierre",
+    "observaciones",
+    "salida"
+  ].forEach(id => campos[id].value = "");
+
+  actualizarContador();
+  actualizarResumen();
+  mostrarAviso("Campos limpiados.");
+}
+
+async function copiar() {
+  const texto = campos.salida.value.trim();
+  if (!texto) {
+    mostrarAviso("Primero genera una redacción.");
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(texto);
+    mostrarAviso("Texto copiado al portapapeles.");
+  } catch {
+    campos.salida.select();
+    document.execCommand("copy");
+    mostrarAviso("Texto copiado.");
+  }
+}
+
+function guardar() {
+  const texto = campos.salida.value.trim();
+  if (!texto) {
+    mostrarAviso("Primero genera una redacción.");
+    return;
+  }
+
+  const item = {
+    fecha: new Date().toLocaleString("es-MX"),
+    modo: nombresModo[state.mode],
+    corporacion: corporaciones[campos.corporacion.value],
+    texto
+  };
+
+  const historial = obtenerHistorial();
+  historial.unshift(item);
+  localStorage.setItem("historialRedactorTurnos911", JSON.stringify(historial.slice(0, 30)));
+  renderHistorial();
+  mostrarAviso("Redacción guardada en historial.");
+}
+
+function obtenerHistorial() {
+  try {
+    return JSON.parse(localStorage.getItem("historialRedactorTurnos911")) || [];
+  } catch {
+    return [];
+  }
+}
+
+function renderHistorial() {
+  const historial = obtenerHistorial();
+
+  if (!historial.length) {
+    campos.historial.className = "history-empty";
+    campos.historial.innerHTML = "Aún no hay redacciones guardadas.";
+    return;
+  }
+
+  campos.historial.className = "";
+  campos.historial.innerHTML = historial.map((item, index) => `
+    <article class="history-item">
+      <div class="history-meta">${escapeHtml(item.fecha)} · ${escapeHtml(item.modo)} · ${escapeHtml(item.corporacion)}</div>
+      <div class="history-text">${escapeHtml(item.texto)}</div>
+      <button class="btn ghost" onclick="usarHistorial(${index})">Usar este texto</button>
+    </article>
+  `).join("");
+}
+
+function usarHistorial(index) {
+  const historial = obtenerHistorial();
+  if (!historial[index]) return;
+  campos.salida.value = historial[index].texto;
+  actualizarContador();
+  mostrarAviso("Texto cargado desde historial.");
+}
+
+function borrarHistorial() {
+  localStorage.removeItem("historialRedactorTurnos911");
+  renderHistorial();
+  mostrarAviso("Historial borrado.");
+}
+
+function descargar() {
+  const texto = campos.salida.value.trim();
+  if (!texto) {
+    mostrarAviso("Primero genera una redacción.");
+    return;
+  }
+
+  const blob = new Blob([texto], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const fecha = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `redaccion_turno_911_${fecha}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  mostrarAviso("TXT descargado.");
+}
+
+function agregarFrase(texto) {
+  const actual = campos.observaciones.value.trim();
+  campos.observaciones.value = actual ? `${actual} ${texto}` : texto;
+  actualizarResumen();
+}
+
+function mostrarAviso(texto) {
+  campos.aviso.textContent = texto;
+  setTimeout(() => {
+    if (campos.aviso.textContent === texto) campos.aviso.textContent = "";
+  }, 3200);
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function actualizarFechaHora() {
+  campos.fechaHora.textContent = new Date().toLocaleString("es-MX", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  });
+}
+
+$$(".mode-card").forEach(btn => btn.addEventListener("click", () => setMode(btn.dataset.mode)));
+$$(".quick").forEach(btn => btn.addEventListener("click", () => setMode(btn.dataset.mode)));
+$$(".chip").forEach(btn => btn.addEventListener("click", () => agregarFrase(btn.dataset.text)));
+
+["corporacion", "incidente", "ubicacion", "medio", "estatus"].forEach(id => {
+  campos[id].addEventListener("input", actualizarResumen);
+});
+
+$("generar").addEventListener("click", generarTexto);
+$("limpiar").addEventListener("click", limpiar);
+$("copiar").addEventListener("click", copiar);
+$("guardar").addEventListener("click", guardar);
+$("descargar").addEventListener("click", descargar);
+$("borrarHistorial").addEventListener("click", borrarHistorial);
+campos.salida.addEventListener("input", actualizarContador);
+
+actualizarFechaHora();
+setInterval(actualizarFechaHora, 30000);
+setMode("turnar");
+renderHistorial();
+actualizarContador();
+actualizarResumen();
+
+</script>
+</body>
+</html>
